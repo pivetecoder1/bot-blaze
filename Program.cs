@@ -45,7 +45,7 @@ public static class ApiConsumer
     {
         { "accept", "application/json, text/plain, */*" },
         { "accept-language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7,es;q=0.6" },
-        { "authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTE0MTE1MTMsImlzUmVmcmVzaFRva2VuIjpmYWxzZSwiYmxvY2tzIjpbXSwidXVpZCI6IjFlMjA0OTU1LTZjNWUtNGZmZC04MDI5LWZkZTI0ODEwMDBiMiIsImlhdCI6MTc3NTE3NDU1NSwiZXhwIjoxNzc1MjE3NzU1fQ.dijjGTJZbRF17zSfWuZouLFNJ5RtbvAhUhrEpYmwwGU" },
+        { "authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTE0MTE1MTMsImlzUmVmcmVzaFRva2VuIjpmYWxzZSwiYmxvY2tzIjpbXSwidXVpZCI6IjY2ZWQ1MDUwLTYyYTYtNGM1Ny05N2Y0LTc0NmY5MDhlYjE1OSIsImlhdCI6MTc3NTE4MjczNywiZXhwIjoxNzc1MjI1OTM3fQ.eTOssgzy5JhcB-bNeoJrn6bKs3jA5pweIzwYOyOvE-c" },
         { "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" },
         { "x-client-version", "ed795cb38" },
         { "x-session-id", "Wld46D5Ybl" },
