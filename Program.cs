@@ -37,19 +37,18 @@ public static class ApiConsumer
     private static TelegramBotClient? botClient;
     private static readonly HttpClient httpClient = new HttpClient();
     
-    private const string ApiUrl = "https://blaze.bet.br/api/singleplayer-originals/originals/roulette_games/recent/1";
+    // API PÚBLICA - NÃO PRECISA DE TOKEN!
+    private const string ApiUrl = "https://api-v2.blaze.com/roulette_games/recent";
     private const string ChatId = "5254675478";
     private const string BotToken = "8628893389:AAHkUuGs4Kgq9kd5KDgegvLtQf6W4yt1SV0";
     
+    // Headers básicos (sem autorização)
     private static readonly Dictionary<string, string> Headers = new()
     {
         { "accept", "application/json, text/plain, */*" },
         { "accept-language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7,es;q=0.6" },
-        { "authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTE0MTE1MTMsImlzUmVmcmVzaFRva2VuIjpmYWxzZSwiYmxvY2tzIjpbXSwidXVpZCI6IjY2ZWQ1MDUwLTYyYTYtNGM1Ny05N2Y0LTc0NmY5MDhlYjE1OSIsImlhdCI6MTc3NTE4MjczNywiZXhwIjoxNzc1MjI1OTM3fQ.eTOssgzy5JhcB-bNeoJrn6bKs3jA5pweIzwYOyOvE-c" },
         { "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" },
-        { "x-client-version", "ed795cb38" },
-        { "x-session-id", "Wld46D5Ybl" },
-        { "referer", "https://blaze.bet.br/pt/games/double" }
+        { "referer", "https://blaze.com/pt/games/double" }
     };
 
     public static int wins = 0;
@@ -79,7 +78,7 @@ public static class ApiConsumer
         Console.WriteLine("        BOT BLAZE INICIADO!              ");
         Console.WriteLine("=========================================");
         Console.WriteLine($"Chat ID: {ChatId}");
-        Console.WriteLine("API: Blaze.bet.br (Autenticada)");
+        Console.WriteLine("API: API PÚBLICA (sem token)");
         Console.WriteLine("=========================================");
         Console.WriteLine("Bot iniciado com sucesso!");
         Console.WriteLine("Aguardando padrões da Blaze...");
@@ -135,7 +134,14 @@ public static class ApiConsumer
             }
             
             var responseBody = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<Data>>(responseBody) ?? new List<Data>();
+            var dataList = JsonSerializer.Deserialize<List<Data>>(responseBody);
+            
+            if (dataList != null && dataList.Count > 0)
+            {
+                Console.WriteLine($"✅ API funcionando! Última cor: {CorNome(dataList[0].color)}");
+            }
+            
+            return dataList ?? new List<Data>();
         }
         catch (Exception ex)
         {
@@ -166,7 +172,6 @@ public static class ApiConsumer
 
             if (dataList.Count < 4) 
             {
-                Console.WriteLine("⚠️ Aguardando dados da API...");
                 continue;
             }
 
