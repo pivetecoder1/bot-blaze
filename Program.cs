@@ -135,56 +135,64 @@ public static class ApiConsumer
     }
 
     public static async Task CheckEstrategias(List<Estrategias> ListEstrategias)
+{
+    int contador = 0;
+    
+    while (true)
     {
-        while (true)
+        await Task.Delay(1500);
+        var dataList = await RetornaUltimosResultados();
+
+        if (dataList.Count < 4) continue;
+
+        // Converte cores para nomes com emojis
+        string cor1 = dataList[3].color == 0 ? "⚪ BRANCO" : (dataList[3].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
+        string cor2 = dataList[2].color == 0 ? "⚪ BRANCO" : (dataList[2].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
+        string cor3 = dataList[1].color == 0 ? "⚪ BRANCO" : (dataList[1].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
+        string cor4 = dataList[0].color == 0 ? "⚪ BRANCO" : (dataList[0].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
+        
+        // Mostra a cada 10 segundos (não a cada 1.5s para não poluir)
+        contador++;
+        if (contador >= 6)
         {
-            await Task.Delay(1500);
-            var dataList = await RetornaUltimosResultados();
+            contador = 0;
+            Console.WriteLine("");
+            Console.WriteLine($"📊 [{DateTime.Now:HH:mm:ss}] Últimas cores:");
+            Console.WriteLine($"   {cor1} ← (mais antiga)");
+            Console.WriteLine($"   {cor2}");
+            Console.WriteLine($"   {cor3}");
+            Console.WriteLine($"   {cor4} ← (última rodada)");
+            Console.WriteLine($"🎯 Estatísticas: Wins:{wins} | Loss:{losses} | Branco:{whites} | Total:{totalEntradas} | Acertos:{GetWinPercentage():F1}%");
+            Console.WriteLine("🔍 Procurando padrões...");
+            Console.WriteLine("-----------------------------------------");
+        }
 
-            if (dataList.Count < 4) continue;
-
-            // Converte cores para nomes com emojis
-            string cor1 = dataList[3].color == 0 ? "⚪ BRANCO" : (dataList[3].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
-            string cor2 = dataList[2].color == 0 ? "⚪ BRANCO" : (dataList[2].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
-            string cor3 = dataList[1].color == 0 ? "⚪ BRANCO" : (dataList[1].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
-            string cor4 = dataList[0].color == 0 ? "⚪ BRANCO" : (dataList[0].color == 1 ? "🔴 VERMELHO" : "⚫ PRETO");
-            
-            string cores = $"🎨 Últimas cores:\n{cor1} | {cor2} | {cor3} | {cor4}";
-            
-            if (cores != ultimosResultados)
+        foreach (var estrategia in ListEstrategias)
+        {
+            if (estrategia.comparacaoUm == dataList[0].color &&
+                estrategia.comparacaoDois == dataList[1].color &&
+                estrategia.comparacaoTres == dataList[2].color &&
+                estrategia.comparacaoQuatro == dataList[3].color)
             {
-                ultimosResultados = cores;
-                Console.Clear();
-                Console.WriteLine("=========================================");
-                Console.WriteLine("        BOT BLAZE INICIADO!              ");
-                Console.WriteLine("=========================================");
-                Console.WriteLine(cores);
-                Console.WriteLine("-----------------------------------------");
-                Console.WriteLine($"✅ Wins: {wins} | ❌ Loss: {losses} | ⚪ Branco: {whites}");
-                Console.WriteLine($"📊 Total: {totalEntradas} | 🎯 Win%: {GetWinPercentage():F1}%");
-                Console.WriteLine("=========================================");
-                Console.WriteLine("🔍 Procurando padrões...");
-            }
-
-            foreach (var estrategia in ListEstrategias)
-            {
-                if (estrategia.comparacaoUm == dataList[0].color &&
-                    estrategia.comparacaoDois == dataList[1].color &&
-                    estrategia.comparacaoTres == dataList[2].color &&
-                    estrategia.comparacaoQuatro == dataList[3].color)
-                {
-                    string nomeCor = estrategia.color == 0 ? "BRANCO" : (estrategia.color == 1 ? "VERMELHO" : "PRETO");
-                    string emojiCor = estrategia.color == 0 ? "⚪" : (estrategia.color == 1 ? "🔴" : "⚫");
-                    string protecao = "⚪️";
-                    
-                    await EnviarMensagemEntrada(nomeCor, emojiCor, protecao);
-                    await AguardarResultado(dataList[0].id, estrategia.color, estrategia.colorProteger);
-                    
-                    await Task.Delay(5000);
-                }
+                Console.WriteLine("");
+                Console.WriteLine("🎯🎯🎯 PADRÃO ENCONTRADO! 🎯🎯🎯");
+                Console.WriteLine($"Sequência de cores: {cor4} | {cor3} | {cor2} | {cor1}");
+                
+                string nomeCor = estrategia.color == 0 ? "BRANCO" : (estrategia.color == 1 ? "VERMELHO" : "PRETO");
+                string emojiCor = estrategia.color == 0 ? "⚪" : (estrategia.color == 1 ? "🔴" : "⚫");
+                string protecao = "⚪️";
+                
+                Console.WriteLine($"🎯 ENTRAR NA COR: {emojiCor} {nomeCor}");
+                Console.WriteLine("📤 Enviando mensagem para o Telegram...");
+                
+                await EnviarMensagemEntrada(nomeCor, emojiCor, protecao);
+                await AguardarResultado(dataList[0].id, estrategia.color, estrategia.colorProteger);
+                
+                await Task.Delay(5000);
             }
         }
     }
+}
 
     #endregion
 
