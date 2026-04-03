@@ -1,0 +1,87 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj",
+        "projectName": "TELEGRAMBOT ADM",
+        "projectPath": "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj",
+        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.2, )"
+            },
+            "Selenium.Support": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "Selenium.WebDriver": {
+              "target": "Package",
+              "version": "[4.8.1, )"
+            },
+            "Selenium.WebDriver.ChromeDriver": {
+              "target": "Package",
+              "version": "[110.0.5481.7700, )"
+            },
+            "Telegram.Bot": {
+              "target": "Package",
+              "version": "[17.0.0, )"
+            },
+            "mercadopago-sdk": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.428\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
