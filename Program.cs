@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
-using System.IO;
 
 public static class ApiConsumer
 {
@@ -37,18 +36,19 @@ public static class ApiConsumer
     private static TelegramBotClient? botClient;
     private static readonly HttpClient httpClient = new HttpClient();
     
-    // API PÚBLICA - NÃO PRECISA DE TOKEN!
-    private const string ApiUrl = "https://api-v2.blaze.com/roulette_games/recent";
-    private const string ChatId = "5254675478";
+    private const string ApiUrl = "https://blaze.bet.br/api/singleplayer-originals/originals/roulette_games/recent/1";
+    private const string ChatId = "-1003703022979";
     private const string BotToken = "8628893389:AAHkUuGs4Kgq9kd5KDgegvLtQf6W4yt1SV0";
     
-    // Headers básicos (sem autorização)
     private static readonly Dictionary<string, string> Headers = new()
     {
         { "accept", "application/json, text/plain, */*" },
         { "accept-language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7,es;q=0.6" },
+        { "authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTE0MTE1MTMsImlzUmVmcmVzaFRva2VuIjpmYWxzZSwiYmxvY2tzIjpbXSwidXVpZCI6IjFlMjA0OTU1LTZjNWUtNGZmZC04MDI5LWZkZTI0ODEwMDBiMiIsImlhdCI6MTc3NTE3NDU1NSwiZXhwIjoxNzc1MjE3NzU1fQ.dijjGTJZbRF17zSfWuZouLFNJ5RtbvAhUhrEpYmwwGU" },
         { "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" },
-        { "referer", "https://blaze.com/pt/games/double" }
+        { "x-client-version", "ed795cb38" },
+        { "x-session-id", "Wld46D5Ybl" },
+        { "referer", "https://blaze.bet.br/pt/games/double" }
     };
 
     public static int wins = 0;
@@ -58,31 +58,27 @@ public static class ApiConsumer
     public static int tentativasAtuais = 0;
     public static bool emJogo = false;
 
+    private static string ultimosResultados = "";
+    private static bool primeiraExecucao = true;
+
     #endregion
 
     #region Main
 
     static async Task Main(string[] args)
     {
-        // Força os logs aparecerem no Railway
-        Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
-        
         foreach (var header in Headers)
         {
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
         }
         
         botClient = new TelegramBotClient(BotToken);
-        
         Console.WriteLine("=========================================");
         Console.WriteLine("        BOT BLAZE INICIADO!              ");
         Console.WriteLine("=========================================");
         Console.WriteLine($"Chat ID: {ChatId}");
-        Console.WriteLine("API: API PÚBLICA (sem token)");
         Console.WriteLine("=========================================");
-        Console.WriteLine("Bot iniciado com sucesso!");
-        Console.WriteLine("Aguardando padrões da Blaze...");
-        Console.WriteLine("");
+        Console.WriteLine("Carregando...");
         
         await Start();
     }
@@ -106,15 +102,14 @@ public static class ApiConsumer
         };
     }
 
-    private static string CorNome(int cor)
+    private static string GetEmoji(int color)
     {
-        return cor switch
-        {
-            0 => "⚪ BRANCO",
-            1 => "🔴 VERMELHO",
-            2 => "⚫ PRETO",
-            _ => "❓ DESCONHECIDO"
-        };
+        return color == 0 ? "⚪" : (color == 1 ? "🔴" : "⚫");
+    }
+
+    private static string GetNome(int color)
+    {
+        return color == 0 ? "BRANCO" : (color == 1 ? "VERMELHO" : "PRETO");
     }
 
     #endregion
@@ -129,23 +124,15 @@ public static class ApiConsumer
             
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"⚠️ API retornou: {response.StatusCode}");
                 return new List<Data>();
             }
             
             var responseBody = await response.Content.ReadAsStringAsync();
-            var dataList = JsonSerializer.Deserialize<List<Data>>(responseBody);
-            
-            if (dataList != null && dataList.Count > 0)
-            {
-                Console.WriteLine($"✅ API funcionando! Última cor: {CorNome(dataList[0].color)}");
-            }
-            
-            return dataList ?? new List<Data>();
+            return JsonSerializer.Deserialize<List<Data>>(responseBody) ?? new List<Data>();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Erro na API: {ex.Message}");
+            Console.WriteLine($"Erro na API: {ex.Message}");
             return new List<Data>();
         }
     }
@@ -156,69 +143,87 @@ public static class ApiConsumer
 
     public static async Task Start()
     {
-        Console.WriteLine("Iniciando monitoramento...");
         await CheckEstrategias(GetListaDeEstrategias());
     }
 
     public static async Task CheckEstrategias(List<Estrategias> ListEstrategias)
     {
-        int contador = 0;
-        Console.WriteLine("Procurando padrões na Blaze...");
-        
         while (true)
         {
-            await Task.Delay(1500);
+            await Task.Delay(2000);
             var dataList = await RetornaUltimosResultados();
 
-            if (dataList.Count < 4) 
-            {
-                continue;
-            }
+            if (dataList.Count < 4) continue;
 
-            // Converte cores para nomes com emojis
-            string cor1 = CorNome(dataList[3].color);
-            string cor2 = CorNome(dataList[2].color);
-            string cor3 = CorNome(dataList[1].color);
-            string cor4 = CorNome(dataList[0].color);
+            // Pega as últimas 4 cores
+            int corAtual1 = dataList[0].color;
+            int corAtual2 = dataList[1].color;
+            int corAtual3 = dataList[2].color;
+            int corAtual4 = dataList[3].color;
             
-            // Mostra a cada 10 segundos
-            contador++;
-            if (contador >= 6)
+            string corEmoji1 = GetEmoji(corAtual1);
+            string corEmoji2 = GetEmoji(corAtual2);
+            string corEmoji3 = GetEmoji(corAtual3);
+            string corEmoji4 = GetEmoji(corAtual4);
+            
+            string cores = $"{corEmoji4} {corEmoji3} {corEmoji2} {corEmoji1}";
+            string coresNomes = $"{GetNome(corAtual4)} | {GetNome(corAtual3)} | {GetNome(corAtual2)} | {GetNome(corAtual1)}";
+            
+            if (cores != ultimosResultados || primeiraExecucao)
             {
-                contador = 0;
-                Console.WriteLine("");
-                Console.WriteLine($"📊 [{DateTime.Now:HH:mm:ss}] ÚLTIMAS 4 CORES:");
-                Console.WriteLine($"   ← {cor1}");
-                Console.WriteLine($"   ← {cor2}");
-                Console.WriteLine($"   ← {cor3}");
-                Console.WriteLine($"   ← {cor4} (ÚLTIMA)");
-                Console.WriteLine($"📈 Estatísticas: ✅Wins:{wins} | ❌Loss:{losses} | ⚪Branco:{whites} | 📊Total:{totalEntradas} | 🎯Taxa:{GetWinPercentage():F1}%");
-                Console.WriteLine("🔍 Procurando padrões...");
+                primeiraExecucao = false;
+                ultimosResultados = cores;
+                Console.Clear();
+                Console.WriteLine("=========================================");
+                Console.WriteLine("        BOT BLAZE INICIADO!              ");
+                Console.WriteLine("=========================================");
+                Console.WriteLine($"📊 Últimas cores: {cores}");
+                Console.WriteLine($"📋 {coresNomes}");
                 Console.WriteLine("-----------------------------------------");
+                Console.WriteLine($"✅ Wins: {wins} | ❌ Loss: {losses} | ⚪ Branco: {whites}");
+                Console.WriteLine($"📊 Total: {totalEntradas} | 🎯 Acertos: {GetWinPercentage():F1}%");
+                Console.WriteLine("=========================================");
+                Console.WriteLine("🔍 Procurando padrões...");
             }
 
             foreach (var estrategia in ListEstrategias)
             {
-                if (estrategia.comparacaoUm == dataList[0].color &&
-                    estrategia.comparacaoDois == dataList[1].color &&
-                    estrategia.comparacaoTres == dataList[2].color &&
-                    estrategia.comparacaoQuatro == dataList[3].color)
+                if (estrategia.comparacaoUm == corAtual1 &&
+                    estrategia.comparacaoDois == corAtual2 &&
+                    estrategia.comparacaoTres == corAtual3 &&
+                    estrategia.comparacaoQuatro == corAtual4)
                 {
-                    Console.WriteLine("");
-                    Console.WriteLine("🎯🎯🎯 PADRÃO ENCONTRADO! 🎯🎯🎯");
-                    Console.WriteLine($"📊 Sequência: {cor4} | {cor3} | {cor2} | {cor1}");
-                    
                     string nomeCor = estrategia.color == 0 ? "BRANCO" : (estrategia.color == 1 ? "VERMELHO" : "PRETO");
                     string emojiCor = estrategia.color == 0 ? "⚪" : (estrategia.color == 1 ? "🔴" : "⚫");
                     string protecao = "⚪️";
                     
-                    Console.WriteLine($"🎯 ENTRAR NA COR: {emojiCor} {nomeCor}");
-                    Console.WriteLine("📤 Enviando mensagem para o Telegram...");
+                    Console.WriteLine("");
+                    Console.WriteLine("⚠️ ANALISANDO POSSÍVEL ENTRADA ⚠️");
+                    Console.WriteLine($"📊 Padrão: {GetEmoji(estrategia.comparacaoQuatro)} {GetEmoji(estrategia.comparacaoTres)} {GetEmoji(estrategia.comparacaoDois)} {GetEmoji(estrategia.comparacaoUm)}");
+                    Console.WriteLine($"🎯 Apostar: {emojiCor} {nomeCor}");
+                    Console.WriteLine("⏳ Aguardem...");
+                    Console.WriteLine("");
                     
-                    await EnviarMensagemEntrada(nomeCor, emojiCor, protecao);
-                    await AguardarResultado(dataList[0].id, estrategia.color, estrategia.colorProteger);
+                    await Task.Delay(3000);
                     
-                    await Task.Delay(5000);
+                    // Confirma se o padrão continua
+                    var novaLista = await RetornaUltimosResultados();
+                    if (novaLista.Count >= 4 &&
+                        estrategia.comparacaoUm == novaLista[0].color &&
+                        estrategia.comparacaoDois == novaLista[1].color &&
+                        estrategia.comparacaoTres == novaLista[2].color &&
+                        estrategia.comparacaoQuatro == novaLista[3].color)
+                    {
+                        Console.WriteLine($"✅ ENTRADA CONFIRMADA! ({nomeCor})");
+                        await EnviarMensagemEntrada(nomeCor, emojiCor, protecao);
+                        await AguardarResultado(dataList[0].id, estrategia.color, estrategia.colorProteger);
+                    }
+                    else
+                    {
+                        Console.WriteLine("❌ Padrão quebrou - Entrada cancelada!");
+                    }
+                    
+                    await Task.Delay(45000);
                 }
             }
         }
@@ -235,21 +240,17 @@ public static class ApiConsumer
         
         while (tentativasAtuais <= 3)
         {
-            await Task.Delay(3000);
+            await Task.Delay(5000);
             var dataList = await RetornaUltimosResultados();
             
             if (dataList.Count > 0 && dataList[0].id != idRodada)
             {
                 int resultado = dataList[0].color;
-                string resultadoNome = CorNome(resultado);
-                
-                Console.WriteLine($"📊 Resultado da rodada: {resultadoNome}");
                 
                 if (resultado == corSelecionada)
                 {
                     wins++;
                     totalEntradas++;
-                    Console.WriteLine($"✅ WIN! (GALE {tentativasAtuais})");
                     await EnviarMensagemWin(corSelecionada, tentativasAtuais);
                     emJogo = false;
                     return;
@@ -258,7 +259,6 @@ public static class ApiConsumer
                 {
                     whites++;
                     totalEntradas++;
-                    Console.WriteLine($"✅ WIN NA PROTEÇÃO! (Branco)");
                     await EnviarMensagemWhite();
                     emJogo = false;
                     return;
@@ -268,7 +268,6 @@ public static class ApiConsumer
                     if (tentativasAtuais < 3)
                     {
                         tentativasAtuais++;
-                        Console.WriteLine($"❌ LOSS! Indo para GALE {tentativasAtuais}/3");
                         await EnviarMensagemGale(tentativasAtuais, corSelecionada, corProtecao);
                         idRodada = dataList[0].id;
                     }
@@ -276,7 +275,6 @@ public static class ApiConsumer
                     {
                         losses++;
                         totalEntradas++;
-                        Console.WriteLine($"❌❌❌ LOSS TOTAL! 3 tentativas esgotadas.");
                         await EnviarMensagemLoss();
                         emJogo = false;
                         return;
@@ -298,12 +296,10 @@ public static class ApiConsumer
         
         string mensagem = $"💰💵 <b>ENTRADA CONFIRMADA</b> 💵💰\n\n";
         mensagem += $"✅ <b>APOSTAR</b> {emoji} + {protecao}\n\n";
-        mensagem += $"📌 <b>APÓS NÚMERO:</b> {numeroFormatado}\n\n";
-        mensagem += $"\n👩‍💻 <a href='http://bit.ly/blazelinkEMG'><b>ABRIR JOGO</b></a>\n";
-        mensagem += $"\n➡️ <a href='http://bit.ly/3kSqs24'>CLIQUE AQUI</a> E ABRA SUA CONTA!";
+        mensagem += $"📌 <b>APÓS NÚMERO:</b> {numeroFormatado}";
         
         await botClient!.SendTextMessageAsync(ChatId, mensagem, ParseMode.Html, disableWebPagePreview: true);
-        Console.WriteLine($"✅ Mensagem de ENTRADA enviada para o Telegram!");
+        Console.WriteLine($"📤 Entrada enviada: {cor}");
     }
 
     public static async Task EnviarMensagemWin(int cor, int tentativa)
@@ -322,7 +318,7 @@ public static class ApiConsumer
         mensagem += $"🎯 Win %: {GetWinPercentage():F1}%";
         
         await botClient!.SendTextMessageAsync(ChatId, mensagem, ParseMode.Html);
-        Console.WriteLine($"✅ Mensagem de WIN enviada!");
+        Console.WriteLine($"✅ WIN! {corNome} (GALE {tentativa}/3)");
     }
 
     public static async Task EnviarMensagemWhite()
@@ -338,7 +334,7 @@ public static class ApiConsumer
         mensagem += $"🎯 Win %: {GetWinPercentage():F1}%";
         
         await botClient!.SendTextMessageAsync(ChatId, mensagem, ParseMode.Html);
-        Console.WriteLine($"✅ Mensagem de WIN NA PROTEÇÃO enviada!");
+        Console.WriteLine($"✅ WIN na proteção (Branco)");
     }
 
     public static async Task EnviarMensagemGale(int gale, int cor, int protecao)
@@ -354,7 +350,7 @@ public static class ApiConsumer
         mensagem += $"💪 <b>Continue! Próxima rodada!</b>";
         
         await botClient!.SendTextMessageAsync(ChatId, mensagem, ParseMode.Html);
-        Console.WriteLine($"⚠️ Mensagem de GALE {gale}/3 enviada!");
+        Console.WriteLine($"⚠️ GALE {gale}/3");
     }
 
     public static async Task EnviarMensagemLoss()
@@ -370,7 +366,7 @@ public static class ApiConsumer
         mensagem += $"🎯 Win %: {GetWinPercentage():F1}%";
         
         await botClient!.SendTextMessageAsync(ChatId, mensagem, ParseMode.Html);
-        Console.WriteLine($"❌ Mensagem de LOSS enviada!");
+        Console.WriteLine($"❌ LOSS TOTAL!");
     }
 
     public static float GetWinPercentage()

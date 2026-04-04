@@ -723,11 +723,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj",
+      "projectUniqueName": "C:\\Users\\User\\Desktop\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj",
       "projectName": "TELEGRAMBOT ADM",
-      "projectPath": "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj",
+      "projectPath": "C:\\Users\\User\\Desktop\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM.csproj",
       "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\User\\Desktop\\Double-Blaze-main\\Double-Blaze-main\\TELEGRAMBOT ADM\\obj\\",
+      "outputPath": "C:\\Users\\User\\Desktop\\TELEGRAMBOT ADM\\TELEGRAMBOT ADM\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config"
